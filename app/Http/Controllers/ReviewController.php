@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Rental;
 use App\Models\Review;
 use App\Models\ReviewCategory;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class ReviewController extends Controller
 {
@@ -22,33 +24,25 @@ class ReviewController extends Controller
      */
     public function store(Request $request)
     {
+        // Create the rental
+        $rental = new Rental();
+        $rental->name = $request->name;
+        $rental->address = $request->address;
+        $rental->type = $request->type;
+        $rental->save();
+
+        // Create the review for the rental
         $review = new Review();
-        $review->name = $request->name;
-        $review->address = $request->address;
+        $review->rental_id = $rental->id;
         $review->review = $request->review;
         $review->save();
 
-        // now add the categories
+        // Now add the categories
         foreach($request->categories as $category){
             ReviewCategory::store($review->id, $category['category_id'], $category['rating']);
         }
+        
         return response()->json($review);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
     }
 
     /**
@@ -64,6 +58,14 @@ class ReviewController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $review = Review::find($id);
+
+        if(!$review){
+            return response()->json(['message' => "Review not found with id $id"], Response::HTTP_NOT_FOUND);
+        }
+
+        $review->delete();
+
+        return response()->json(['message' => 'Review deleted.']);
     }
 }
