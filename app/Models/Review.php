@@ -12,6 +12,7 @@ class Review extends Model
     protected $appends = [
         'categories',
         'rental',
+        'rating',
     ];
 
     protected $hidden = [
@@ -36,5 +37,15 @@ class Review extends Model
     protected function getRentalAttribute() {
         $rental = Rental::find($this->rental_id);
         return $rental;
+    }
+
+    protected function getRatingAttribute() {
+        $categories = $this->getCategoriesAttribute();
+        $ratings = [];
+        foreach($categories as $category) {
+            $ratings[] = $category['rating'];
+        }
+
+        return array_sum($ratings) / count($ratings);
     }
 }
